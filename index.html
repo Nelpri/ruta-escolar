@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Servicio de transporte escolar confiable y seguro">
+  <meta name="keywords" content="transporte escolar, ruta escolar, seguridad infantil">
+  <title>Ruta Escolar Segura | Transporte Estudiantil</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <header role="banner">
+    <div class="container">
+      <h1>🚌 Ruta Escolar Segura</h1>
+      <p>Servicio de transporte escolar confiable y seguro</p>
+    </div>
+  </header>
+
+  <main class="container" role="main">
+    <!-- Sección: Periodo del Servicio -->
+    <section class="info-section" aria-labelledby="service-period">
+      <h2 id="service-period">📅 Periodo del Servicio</h2>
+      <p>Febrero a Noviembre 2025</p>
+    </section>
+
+    <!-- Sección: Detalles del Vehículo -->
+    <section class="info-section" aria-labelledby="vehicle-details">
+      <h2 id="vehicle-details">🚗 Detalles del Vehículo</h2>
+      <div class="vehicle-details">
+        <img src="assets/bus-icon.jpg" alt="Vehículo escolar tipo bus, placa TZQ-913" class="vehicle-img">
+        <ul>
+          <li><strong>Placa:</strong> TZQ-913</li>
+          <li><strong>Conductor:</strong> Nelson Prieto</li>
+          <li><strong>Monitora:</strong> Olga Fajardo</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Sección: Información de Pagos -->
+    <section class="info-section" aria-labelledby="payment-info">
+      <h2 id="payment-info">💳 Información de Pagos</h2>
+      <div class="payment-methods" role="list">
+        <div class="method" role="listitem">
+          <img src="assets/daviplata-logo.jpeg" alt="Logo DaviPlata" aria-hidden="true">
+          <p>315 328 7083</p>
+        </div>
+        <div class="method" role="listitem">
+          <img src="assets/nequi-logo.jpeg" alt="Logo Nequi" aria-hidden="true">
+          <p>315 328 7083</p>
+        </div>
+        <div class="method" role="listitem">
+          <img src="assets/caja-social-jpeg.jpg" alt="Logo Caja Social" aria-hidden="true">
+          <p>Banco: Caja Social<br>Cuenta: 000-000-000</p>
+        </div>
+      </div>
+      <p class="payment-alert">⚠️ Pagos antes del 5 de cada mes</p>
+    </section>
+
+    <!-- Sección: Contacto -->
+    <section class="info-section contact" aria-labelledby="contact-section">
+      <h2 id="contact-section">📞 Contacto</h2>
+      <p>
+        Teléfono: <a href="tel:+573153287083">315 328 7083</a><br>
+        Email: <a href="mailto:rutescol@ejemplo.com">rutescol@ejemplo.com</a>
+      </p>
+    </section>
+
+    <!-- Sección: Inscripción -->
+    <section class="info-section" id="registrationSection" aria-labelledby="registration-heading">
+      <h2 id="registration-heading">📝 Inscripción</h2>
+      <form id="registrationForm" novalidate>
+        <div class="form-group">
+          <label for="studentName">Nombre del Alumno:</label>
+          <input type="text" id="studentName" required aria-required="true">
+        </div>
+        <div class="form-group">
+          <label for="parentName">Nombre del Padre/Madre:</label>
+          <input type="text" id="parentName" required aria-required="true">
+        </div>
+        <div class="form-group">
+          <label for="email">Correo Electrónico:</label>
+          <input type="email" id="email" required aria-required="true">
+        </div>
+        <div class="form-group">
+          <label for="phone">Teléfono:</label>
+          <input type="tel" id="phone" pattern="[0-9]{10}" required aria-required="true">
+        </div>
+        <div class="form-group">
+          <label for="routeType">Tipo de Ruta:</label>
+          <select id="routeType" required aria-required="true">
+            <option value="" disabled selected>Seleccione una opción</option>
+            <option value="media168">Media Ruta  - $168,000</option>
+            <option value="media180">Media Ruta  - $180,000</option>
+            <option value="completa">Ruta Completa - $284,000</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="paymentMonth">Mes de Cancelación:</label>
+          <select id="paymentMonth" required aria-required="true">
+            <option value="" disabled selected>Seleccione un mes</option>
+            <option value="Febrero">Febrero</option>
+            <option value="Marzo">Marzo</option>
+            <option value="Abril">Abril</option>
+            <option value="Mayo">Mayo</option>
+            <option value="Junio">Junio</option>
+            <option value="Julio">Julio</option>
+            <option value="Agosto">Agosto</option>
+            <option value="Septiembre">Septiembre</option>
+            <option value="Octubre">Octubre</option>
+            <option value="Noviembre">Noviembre</option>
+          </select>
+        </div>
+        <button type="submit" class="btn">Inscribir</button>
+      </form>
+    </section>
+
+    <!-- Sección: Comprobante de Pago -->
+    <section class="info-section receipt" id="paymentReceipt" aria-labelledby="receipt-heading">
+      <h2 id="receipt-heading">💵 Comprobante de Pago</h2>
+      <p><strong>Número de Comprobante:</strong> <span id="receiptNumber"></span></p>
+      <p><strong>Nombre del Alumno:</strong> <span id="receiptStudentName"></span></p>
+      <p><strong>Nombre del Padre/Madre:</strong> <span id="receiptParentName"></span></p>
+      <p><strong>Tipo de Ruta:</strong> <span id="receiptRouteType"></span></p>
+      <p><strong>Valor a Pagar:</strong> $<span id="receiptAmount"></span></p>
+      <p><strong>Mes de Cancelación:</strong> <span id="receiptMonth"></span></p>
+      <button id="downloadReceipt" class="btn">Descargar Comprobante</button>
+    </section>
+  </main>
+
+  <footer role="contentinfo">
+    <div class="container">
+      <p>© 2025 Ruta Escolar - Todos los derechos reservados</p>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>
