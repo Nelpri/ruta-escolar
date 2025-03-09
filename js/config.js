@@ -6,7 +6,7 @@ const CONFIG = {
   },
   CONTACT: {
     phone: '3153287083',
-    email: 'rutescol@ejemplo.com'
+    email: 'yoyotzq913@gmail.com'
   },
   VALIDATION: {
     phonePattern: /^[0-9]{10}$/,
