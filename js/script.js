@@ -2,13 +2,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('registrationForm');
   const paymentReceipt = document.getElementById('paymentReceipt');
 
-  // Precios de las rutas actualizados
-  const routePrices = {
-    media110: 110000,
-    media168: 168000,
-    media180: 180000,
-    completa: 284000 
-  };
+  // Usar precios de la configuración centralizada
+  const routePrices = (typeof CONFIG !== 'undefined' && CONFIG.PRICES)
+    ? CONFIG.PRICES
+    : {
+        media110: 110000,
+        media168: 168000,
+        media180: 180000,
+        completa: 284000
+      };
 
   /**
    * Genera el número de comprobante para el mes seleccionado.
