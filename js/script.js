@@ -4,9 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Precios de las rutas actualizados
   const routePrices = {
+    media110: 110000,
     media168: 168000,
     media180: 180000,
-    completa: 284000
+    completa: 284000 
   };
 
   /**
