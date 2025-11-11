@@ -52,6 +52,192 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
+   * Obtiene la lista de meses del período escolar
+   */
+  function getSchoolMonths() {
+    return ['Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre'];
+  }
+
+  /**
+   * Obtiene el mes actual del período escolar (hasta el mes actual o hasta Noviembre)
+   */
+  function getCurrentMonth() {
+    const months = getSchoolMonths();
+    const currentDate = new Date();
+    const currentMonthName = currentDate.toLocaleString('es-ES', { month: 'long' });
+    const capitalizedMonth = currentMonthName.charAt(0).toUpperCase() + currentMonthName.slice(1);
+    
+    // Mapear nombres de meses en español
+    const monthMap = {
+      'Enero': 'Febrero',
+      'Febrero': 'Febrero',
+      'Marzo': 'Marzo',
+      'Abril': 'Abril',
+      'Mayo': 'Mayo',
+      'Junio': 'Junio',
+      'Julio': 'Julio',
+      'Agosto': 'Agosto',
+      'Septiembre': 'Septiembre',
+      'Octubre': 'Octubre',
+      'Noviembre': 'Noviembre',
+      'Diciembre': 'Noviembre'
+    };
+    
+    return monthMap[capitalizedMonth] || 'Noviembre';
+  }
+
+  /**
+   * Obtiene los meses requeridos hasta el mes actual
+   */
+  function getRequiredMonths() {
+    const allMonths = getSchoolMonths();
+    const currentMonth = getCurrentMonth();
+    const currentMonthIndex = allMonths.indexOf(currentMonth);
+    return allMonths.slice(0, currentMonthIndex + 1);
+  }
+
+  /**
+   * Obtiene el mes de inicio del alumno (primer mes con pago registrado)
+   */
+  function getStudentStartMonth(student) {
+    if (!student || !student.payments || student.payments.length === 0) {
+      return null;
+    }
+    
+    const allMonths = getSchoolMonths();
+    const paidMonths = student.payments.map(p => p.month);
+    
+    // Ordenar los meses pagados según el orden del período escolar
+    const sortedPaidMonths = paidMonths.sort((a, b) => {
+      return allMonths.indexOf(a) - allMonths.indexOf(b);
+    });
+    
+    // Retornar el primer mes pagado (mes de inicio)
+    return sortedPaidMonths[0];
+  }
+
+  /**
+   * Obtiene los meses requeridos desde el mes de inicio del alumno hasta el mes actual
+   */
+  function getRequiredMonthsFromStart(startMonth) {
+    const allMonths = getSchoolMonths();
+    const currentMonth = getCurrentMonth();
+    
+    // Si no hay mes de inicio, retornar desde Febrero (comportamiento por defecto)
+    if (!startMonth) {
+      const currentMonthIndex = allMonths.indexOf(currentMonth);
+      return allMonths.slice(0, currentMonthIndex + 1);
+    }
+    
+    const startMonthIndex = allMonths.indexOf(startMonth);
+    const currentMonthIndex = allMonths.indexOf(currentMonth);
+    
+    // Si el mes de inicio no está en la lista, retornar desde Febrero
+    if (startMonthIndex === -1) {
+      return allMonths.slice(0, currentMonthIndex + 1);
+    }
+    
+    // Retornar meses desde el mes de inicio hasta el mes actual
+    return allMonths.slice(startMonthIndex, currentMonthIndex + 1);
+  }
+
+  /**
+   * Guarda un pago en el historial del alumno
+   */
+  function savePayment(studentName, paymentData) {
+    const studentsKey = 'studentsPayments';
+    let students = JSON.parse(localStorage.getItem(studentsKey) || '{}');
+    
+    // Normalizar el nombre del alumno (minúsculas para búsqueda)
+    const normalizedName = studentName.toLowerCase().trim();
+    
+    if (!students[normalizedName]) {
+      students[normalizedName] = {
+        studentName: studentName, // Guardar nombre original
+        parentName: paymentData.parentName,
+        email: paymentData.email,
+        phone: paymentData.phone,
+        routeType: paymentData.routeType,
+        payments: []
+      };
+    }
+    
+    // Agregar el pago si no existe ya para ese mes
+    const monthExists = students[normalizedName].payments.some(p => p.month === paymentData.paymentMonth);
+    if (!monthExists) {
+      students[normalizedName].payments.push({
+        month: paymentData.paymentMonth,
+        amount: routePrices[paymentData.routeType],
+        date: new Date().toISOString(),
+        receiptNumber: paymentData.receiptNumber
+      });
+      // Actualizar datos del alumno si han cambiado
+      students[normalizedName].parentName = paymentData.parentName;
+      students[normalizedName].email = paymentData.email;
+      students[normalizedName].phone = paymentData.phone;
+      students[normalizedName].routeType = paymentData.routeType;
+    }
+    
+    localStorage.setItem(studentsKey, JSON.stringify(students));
+  }
+
+  /**
+   * Busca un alumno por nombre
+   */
+  function findStudent(studentName) {
+    const studentsKey = 'studentsPayments';
+    const students = JSON.parse(localStorage.getItem(studentsKey) || '{}');
+    const normalizedName = studentName.toLowerCase().trim();
+    return students[normalizedName] || null;
+  }
+
+  /**
+   * Verifica si un alumno está al día con sus pagos
+   */
+  function checkStudentStatus(studentName) {
+    const student = findStudent(studentName);
+    if (!student) {
+      return {
+        found: false,
+        isUpToDate: false,
+        paidMonths: [],
+        pendingMonths: [],
+        studentData: null,
+        startMonth: null,
+        requiredMonths: []
+      };
+    }
+    
+    // Obtener el mes de inicio del alumno
+    const startMonth = getStudentStartMonth(student);
+    
+    // Calcular los meses requeridos desde el mes de inicio hasta el mes actual
+    const requiredMonths = getRequiredMonthsFromStart(startMonth);
+    
+    // Obtener los meses pagados (ordenados)
+    const allMonths = getSchoolMonths();
+    const paidMonths = student.payments.map(p => p.month);
+    const sortedPaidMonths = paidMonths.sort((a, b) => {
+      return allMonths.indexOf(a) - allMonths.indexOf(b);
+    });
+    
+    // Calcular los meses pendientes
+    const pendingMonths = requiredMonths.filter(month => !paidMonths.includes(month));
+    const isUpToDate = pendingMonths.length === 0;
+    
+    return {
+      found: true,
+      isUpToDate: isUpToDate,
+      paidMonths: sortedPaidMonths,
+      pendingMonths: pendingMonths,
+      studentData: student,
+      startMonth: startMonth,
+      requiredMonths: requiredMonths,
+      currentMonth: getCurrentMonth()
+    };
+  }
+
+  /**
    * Genera el comprobante de pago rellenando los campos correspondientes.
    * Se genera sin número de comprobante; este se asigna al confirmar la impresión.
    */
@@ -184,6 +370,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const receiptNumber = generateReceiptNumber(paymentMonth);
     document.getElementById('receiptNumber').textContent = receiptNumber;
 
+    // Obtener los datos del formulario para guardar el pago
+    const studentName = document.getElementById('receiptStudentName').textContent;
+    const parentName = document.getElementById('receiptParentName').textContent;
+    
+    // Intentar obtener datos del formulario, si no están disponibles, obtenerlos de localStorage
+    let email = document.getElementById('email').value.trim();
+    let phone = document.getElementById('phone').value.trim();
+    let routeType = document.getElementById('routeType').value;
+    
+    // Si los campos del formulario están vacíos, intentar obtenerlos de localStorage
+    if (!email || !phone || !routeType) {
+      const storedData = localStorage.getItem('registrationData');
+      if (storedData) {
+        try {
+          const data = JSON.parse(storedData);
+          email = email || data.email || '';
+          phone = phone || data.phone || '';
+          routeType = routeType || data.routeType || '';
+        } catch (error) {
+          console.error("Error al parsear los datos almacenados:", error);
+        }
+      }
+    }
+    
+    const formData = {
+      studentName: studentName,
+      parentName: parentName,
+      email: email,
+      phone: phone,
+      routeType: routeType,
+      paymentMonth: paymentMonth,
+      receiptNumber: receiptNumber
+    };
+
+    // Guardar el pago en el historial del alumno
+    savePayment(studentName, formData);
+
     // Marcar que el comprobante ya fue impreso para este mes
     localStorage.setItem(printedKey, "true");
 
@@ -193,4 +416,118 @@ document.addEventListener('DOMContentLoaded', () => {
     // Limpiar el formulario para el siguiente ingreso
     clearForm();
   });
+
+  // ========== FUNCIONALIDAD DE PAZ Y SALVO ==========
+  
+  // Formulario de búsqueda de paz y salvo
+  const pazSalvoForm = document.getElementById('pazSalvoForm');
+  const pazSalvoResult = document.getElementById('pazSalvoResult');
+  const pazSalvoDocument = document.getElementById('pazSalvoDocument');
+
+  if (pazSalvoForm) {
+    pazSalvoForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const studentName = document.getElementById('pazSalvoStudentName').value.trim();
+      if (!studentName) {
+        alert('Por favor ingrese el nombre del alumno');
+        return;
+      }
+
+      const status = checkStudentStatus(studentName);
+      
+      if (!status.found) {
+        pazSalvoResult.innerHTML = `
+          <div class="alert alert-error">
+            <p>❌ No se encontró ningún registro para el alumno: <strong>${studentName}</strong></p>
+            <p>Por favor verifique que el nombre esté correcto o que el alumno tenga pagos registrados.</p>
+          </div>
+        `;
+        pazSalvoResult.style.display = 'block';
+        pazSalvoDocument.style.display = 'none';
+        return;
+      }
+
+      if (!status.isUpToDate) {
+        const periodText = status.startMonth 
+          ? `desde ${status.startMonth} hasta ${status.currentMonth}`
+          : `hasta ${status.currentMonth}`;
+        
+        pazSalvoResult.innerHTML = `
+          <div class="alert alert-warning">
+            <p>⚠️ El alumno <strong>${status.studentData.studentName}</strong> no está al día con sus pagos.</p>
+            <p><strong>Período requerido:</strong> ${periodText} 2025</p>
+            <p><strong>Mes de inicio del servicio:</strong> ${status.startMonth || 'No determinado'}</p>
+            <p><strong>Meses pagados:</strong> ${status.paidMonths.length > 0 ? status.paidMonths.join(', ') : 'Ninguno'}</p>
+            <p><strong>Meses pendientes:</strong> ${status.pendingMonths.join(', ')}</p>
+            <p>No se puede generar el paz y salvo hasta que el alumno esté al día con todos los pagos requeridos para su período.</p>
+          </div>
+        `;
+        pazSalvoResult.style.display = 'block';
+        pazSalvoDocument.style.display = 'none';
+        return;
+      }
+
+      // El alumno está al día, mostrar el documento de paz y salvo
+      generatePazSalvo(status);
+      pazSalvoResult.style.display = 'none';
+      pazSalvoDocument.style.display = 'block';
+      pazSalvoDocument.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  /**
+   * Genera el documento de paz y salvo
+   */
+  function generatePazSalvo(status) {
+    const studentData = status.studentData;
+    const paidMonths = status.paidMonths;
+    const startMonth = status.startMonth;
+    const currentMonth = status.currentMonth;
+    
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString('es-CO', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+
+    // Mapeo de tipos de ruta a texto descriptivo
+    const routeTypeMap = {
+      'media110': 'Media Ruta - $110,000',
+      'media168': 'Media Ruta - $168,000',
+      'media180': 'Media Ruta - $180,000',
+      'completa': 'Ruta Completa - $284,000'
+    };
+
+    const routeTypeText = routeTypeMap[studentData.routeType] || studentData.routeType;
+
+    // Formatear el período del servicio
+    let periodText = '';
+    if (startMonth && currentMonth) {
+      if (startMonth === currentMonth) {
+        periodText = `${startMonth} 2025`;
+      } else {
+        periodText = `${startMonth} - ${currentMonth} 2025`;
+      }
+    } else {
+      periodText = 'Febrero - Noviembre 2025';
+    }
+
+    document.getElementById('pazSalvoDocStudentName').textContent = studentData.studentName;
+    document.getElementById('pazSalvoDocParentName').textContent = studentData.parentName;
+    document.getElementById('pazSalvoDocRouteType').textContent = routeTypeText;
+    document.getElementById('pazSalvoDocDate').textContent = formattedDate;
+    document.getElementById('pazSalvoDocMonths').textContent = paidMonths.join(', ');
+    document.getElementById('pazSalvoDocTotalMonths').textContent = paidMonths.length;
+    document.getElementById('pazSalvoDocPeriod').textContent = periodText;
+  }
+
+  // Botón para imprimir/descargar el paz y salvo
+  const downloadPazSalvoBtn = document.getElementById('downloadPazSalvo');
+  if (downloadPazSalvoBtn) {
+    downloadPazSalvoBtn.addEventListener('click', () => {
+      window.print();
+    });
+  }
 });

@@ -189,13 +189,125 @@ footer {
   }
 }
 
+/* Estilos para resultado de paz y salvo */
+.paz-salvo-result {
+  display: none;
+  margin-top: 1rem;
+}
+
+#pazSalvoDocument {
+  display: none;
+}
+
+/* Estilos para alertas */
+.alert {
+  padding: 1rem;
+  border-radius: 5px;
+  margin: 1rem 0;
+}
+
+.alert-error {
+  background-color: #ffebee;
+  border: 2px solid #f44336;
+  color: #c62828;
+}
+
+.alert-warning {
+  background-color: #fff3e0;
+  border: 2px solid #ff9800;
+  color: #e65100;
+}
+
+.alert p {
+  margin: 0.5rem 0;
+}
+
+/* Estilos para el documento de Paz y Salvo */
+.paz-salvo-document {
+  max-width: 800px;
+  margin: 2rem auto;
+  background: var(--white);
+  padding: 3rem;
+  border: 2px solid var(--primary-color);
+}
+
+.paz-salvo-content {
+  line-height: 1.8;
+  margin: 2rem 0;
+}
+
+.paz-salvo-intro {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  text-align: justify;
+}
+
+.paz-salvo-student {
+  background: var(--light-color);
+  padding: 1.5rem;
+  border-radius: 5px;
+  margin: 1.5rem 0;
+  border-left: 4px solid var(--primary-color);
+}
+
+.paz-salvo-body {
+  margin: 1.5rem 0;
+  text-align: justify;
+  font-size: 1.05rem;
+}
+
+.paz-salvo-details {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 5px;
+  margin: 1.5rem 0;
+}
+
+.paz-salvo-footer {
+  margin: 2rem 0;
+  text-align: justify;
+  font-weight: 500;
+}
+
+.paz-salvo-date {
+  text-align: right;
+  margin: 2rem 0;
+  font-style: italic;
+}
+
+.paz-salvo-signature {
+  text-align: right;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--border-color);
+}
+
+.paz-salvo-signature p {
+  margin: 0.5rem 0;
+}
+
+.paz-salvo-signature p:first-child {
+  margin-bottom: 3rem;
+}
+
+#paz-salvo-doc-heading {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
 @media print {
   body * {
     visibility: hidden;
   }
   
   #paymentReceipt,
-  #paymentReceipt * {
+  #paymentReceipt *,
+  #pazSalvoDocument,
+  #pazSalvoDocument * {
     visibility: visible;
   }
   
@@ -209,7 +321,23 @@ footer {
     box-shadow: none;
   }
   
-  #downloadReceipt {
+  #pazSalvoDocument {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 2rem;
+    box-shadow: none;
+    border: none;
+  }
+  
+  #downloadReceipt,
+  #downloadPazSalvo {
     display: none;
+  }
+  
+  .paz-salvo-document {
+    page-break-after: always;
   }
 }

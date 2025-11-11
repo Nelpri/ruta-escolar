@@ -76,7 +76,7 @@
           <input type="text" id="studentName" required aria-required="true">
         </div>
         <div class="form-group">
-          <label for="parentName">Nombre del Padre/Madre:</label>
+          <label for="parentName">Nombre del Acudiente:</label>
           <input type="text" id="parentName" required aria-required="true">
         </div>
         <div class="form-group">
@@ -122,11 +122,62 @@
       <h2 id="receipt-heading">💵 Comprobante de Pago</h2>
       <p><strong>Número de Comprobante:</strong> <span id="receiptNumber"></span></p>
       <p><strong>Nombre del Alumno:</strong> <span id="receiptStudentName"></span></p>
-      <p><strong>Nombre del Padre/Madre:</strong> <span id="receiptParentName"></span></p>
+      <p><strong>Nombre del Acudiente:</strong> <span id="receiptParentName"></span></p>
       <p><strong>Tipo de Ruta:</strong> <span id="receiptRouteType"></span></p>
       <p><strong>Valor a Pagar:</strong> $<span id="receiptAmount"></span></p>
       <p><strong>Mes de Cancelación:</strong> <span id="receiptMonth"></span></p>
       <button id="downloadReceipt" class="btn">Descargar Comprobante</button>
+    </section>
+
+    <!-- Sección: Paz y Salvo -->
+    <section class="info-section" id="pazSalvoSection" aria-labelledby="paz-salvo-heading">
+      <h2 id="paz-salvo-heading">📜 Paz y Salvo</h2>
+      <p>Generar documento de paz y salvo para alumnos que estén al día con sus pagos.</p>
+      <form id="pazSalvoForm" novalidate>
+        <div class="form-group">
+          <label for="pazSalvoStudentName">Nombre del Alumno:</label>
+          <input type="text" id="pazSalvoStudentName" required aria-required="true" placeholder="Ingrese el nombre completo del alumno">
+        </div>
+        <button type="submit" class="btn">Verificar y Generar Paz y Salvo</button>
+      </form>
+      
+      <!-- Resultado de la búsqueda -->
+      <div id="pazSalvoResult" class="paz-salvo-result"></div>
+      
+      <!-- Documento de Paz y Salvo -->
+      <div class="info-section paz-salvo-document" id="pazSalvoDocument" aria-labelledby="paz-salvo-doc-heading">
+        <h2 id="paz-salvo-doc-heading">📄 PAZ Y SALVO</h2>
+        <div class="paz-salvo-content">
+          <p class="paz-salvo-intro">
+            Por medio del presente documento, se certifica que:
+          </p>
+          <p class="paz-salvo-student">
+            <strong>Alumno:</strong> <span id="pazSalvoDocStudentName"></span><br>
+            <strong>Acudiente:</strong> <span id="pazSalvoDocParentName"></span><br>
+            <strong>Tipo de Ruta:</strong> <span id="pazSalvoDocRouteType"></span>
+          </p>
+          <p class="paz-salvo-body">
+            Se encuentra al día con todos los pagos correspondientes al servicio de transporte escolar 
+            para el período <strong><span id="pazSalvoDocPeriod"></span></strong>.
+          </p>
+          <p class="paz-salvo-details">
+            <strong>Meses cancelados:</strong> <span id="pazSalvoDocMonths"></span><br>
+            <strong>Total de meses pagados:</strong> <span id="pazSalvoDocTotalMonths"></span>
+          </p>
+          <p class="paz-salvo-footer">
+            Por lo tanto, se expide el presente PAZ Y SALVO para los fines que al interesado convengan.
+          </p>
+          <p class="paz-salvo-date">
+            Fecha de emisión: <span id="pazSalvoDocDate"></span>
+          </p>
+          <div class="paz-salvo-signature">
+            <p>_________________________</p>
+            <p><strong>Nelson Prieto</strong></p>
+            <p>Conductor - Ruta Escolar TZQ-913</p>
+          </div>
+        </div>
+        <button id="downloadPazSalvo" class="btn">Imprimir/Descargar Paz y Salvo</button>
+      </div>
     </section>
   </main>
 
