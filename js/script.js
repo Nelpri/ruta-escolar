@@ -6,10 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const routePrices = (typeof CONFIG !== 'undefined' && CONFIG.PRICES)
     ? CONFIG.PRICES
     : {
-        media110: 110000,
-        media168: 168000,
         media180: 180000,
-        completa: 284000
+        completa: 310000
       };
 
   /**
@@ -21,16 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseNumbers = (typeof CONFIG !== 'undefined' && CONFIG.RECEIPT_BASES)
       ? CONFIG.RECEIPT_BASES
       : {
-          "Febrero": 250201,
-          "Marzo": 250301,
-          "Abril": 250401,
-          "Mayo": 250501,
-          "Junio": 250601,
-          "Julio": 250701,
-          "Agosto": 350801,
-          "Septiembre": 250901,
-          "Octubre": 251001,
-          "Noviembre": 251101
+          "Febrero": 260201,
+          "Marzo": 260301,
+          "Abril": 260401,
+          "Mayo": 260501,
+          "Junio": 260601,
+          "Julio": 260701,
+          "Agosto": 260801,
+          "Septiembre": 260901,
+          "Octubre": 261001,
+          "Noviembre": 261101
         };
     let counter = localStorage.getItem("receiptCounter_" + month);
     if (!counter) {
@@ -456,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pazSalvoResult.innerHTML = `
           <div class="alert alert-warning">
             <p>⚠️ El alumno <strong>${status.studentData.studentName}</strong> no está al día con sus pagos.</p>
-            <p><strong>Período requerido:</strong> ${periodText} 2025</p>
+            <p><strong>Período requerido:</strong> ${periodText} 2026</p>
             <p><strong>Mes de inicio del servicio:</strong> ${status.startMonth || 'No determinado'}</p>
             <p><strong>Meses pagados:</strong> ${status.paidMonths.length > 0 ? status.paidMonths.join(', ') : 'Ninguno'}</p>
             <p><strong>Meses pendientes:</strong> ${status.pendingMonths.join(', ')}</p>
@@ -494,10 +492,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Mapeo de tipos de ruta a texto descriptivo
     const routeTypeMap = {
-      'media110': 'Media Ruta - $110,000',
-      'media168': 'Media Ruta - $168,000',
       'media180': 'Media Ruta - $180,000',
-      'completa': 'Ruta Completa - $284,000'
+      'completa': 'Ruta Completa - $310,000'
     };
 
     const routeTypeText = routeTypeMap[studentData.routeType] || studentData.routeType;
@@ -506,12 +502,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let periodText = '';
     if (startMonth && currentMonth) {
       if (startMonth === currentMonth) {
-        periodText = `${startMonth} 2025`;
+        periodText = `${startMonth} 2026`;
       } else {
-        periodText = `${startMonth} - ${currentMonth} 2025`;
+        periodText = `${startMonth} - ${currentMonth} 2026`;
       }
     } else {
-      periodText = 'Febrero - Noviembre 2025';
+      periodText = 'Febrero - Noviembre 2026';
     }
 
     document.getElementById('pazSalvoDocStudentName').textContent = studentData.studentName;

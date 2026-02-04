@@ -1,9 +1,7 @@
 const CONFIG = {
   PRICES: {
-    media110: 110000,
-    media168: 168000,
     media180: 180000,
-    completa: 284000
+    completa: 310000
   },
   CONTACT: {
     phone: '3153287083',
@@ -14,15 +12,15 @@ const CONFIG = {
     namePattern: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/
   },
   RECEIPT_BASES: {
-    Febrero: 250201,
-    Marzo: 250301,
-    Abril: 250401,
-    Mayo: 250501,
-    Junio: 250601,
-    Julio: 250701,
-    Agosto: 350801,
-    Septiembre: 250901,
-    Octubre: 251001,
-    Noviembre: 251101
+    Febrero: 260201,
+    Marzo: 260301,
+    Abril: 260401,
+    Mayo: 260501,
+    Junio: 260601,
+    Julio: 260701,
+    Agosto: 260801,
+    Septiembre: 260901,
+    Octubre: 261001,
+    Noviembre: 261101
   }
 };
