@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ? CONFIG.PRICES
     : {
         media180: 180000,
+        completa295: 295000,
         completa: 310000
       };
 
@@ -493,6 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mapeo de tipos de ruta a texto descriptivo
     const routeTypeMap = {
       'media180': 'Media Ruta - $180,000',
+      'completa295': 'Ruta completa - $295,000',
       'completa': 'Ruta Completa - $310,000'
     };
 
