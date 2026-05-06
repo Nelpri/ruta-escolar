@@ -1,7 +1,7 @@
 const CONFIG = {
   PRICES: {
     media180: 180000,
-    completa295: 295000,
+    completa295: 300000,
     completa: 310000
   },
   CONTACT: {
