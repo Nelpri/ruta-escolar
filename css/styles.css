@@ -341,3 +341,69 @@ footer {
     page-break-after: always;
   }
 }
+
+/* ===== Paz y salvo con observaciones ===== */
+[hidden] {
+  display: none !important;
+}
+
+.paz-salvo-subtitle {
+  text-align: center;
+  font-weight: bold;
+  color: var(--secondary-color);
+  margin-top: -1.5rem;
+  margin-bottom: 2rem;
+}
+
+.paz-salvo-pending {
+  margin: 1.5rem 0;
+}
+
+.pending-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.pending-table th,
+.pending-table td {
+  border: 1px solid var(--border-color);
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.pending-table th {
+  background: var(--light-color);
+}
+
+.pending-table tr,
+.paz-salvo-signature {
+  page-break-inside: avoid;
+}
+
+.input-error {
+  border-color: #f44336 !important;
+}
+
+.reason-error {
+  color: #c62828;
+  font-weight: bold;
+  margin: 0.5rem 0;
+}
+
+@media print {
+  /* Evita que el comprobante y el paz y salvo se impriman encimados */
+  body.print-paz-salvo #paymentReceipt {
+    display: none !important;
+  }
+
+  body:not(.print-paz-salvo) #pazSalvoDocument {
+    display: none !important;
+  }
+
+  .pending-table th,
+  .pending-table td {
+    border: 1px solid #000;
+  }
+}

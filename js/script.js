@@ -417,16 +417,98 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ========== FUNCIONALIDAD DE PAZ Y SALVO ==========
-  
-  // Formulario de búsqueda de paz y salvo
+
   const pazSalvoForm = document.getElementById('pazSalvoForm');
   const pazSalvoResult = document.getElementById('pazSalvoResult');
   const pazSalvoDocument = document.getElementById('pazSalvoDocument');
 
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /**
+   * Guarda en el historial del alumno el motivo de cada mes sin pago
+   */
+  function savePendingReasons(studentName, reasons) {
+    const students = JSON.parse(localStorage.getItem('studentsPayments') || '{}');
+    const key = studentName.toLowerCase().trim();
+    if (!students[key]) return;
+    students[key].pendingReasons = Object.assign(students[key].pendingReasons || {}, reasons);
+    localStorage.setItem('studentsPayments', JSON.stringify(students));
+  }
+
+  function showPazSalvoDocument(status, reasons) {
+    generatePazSalvo(status, reasons);
+    pazSalvoResult.style.display = 'none';
+    pazSalvoDocument.style.display = 'block';
+    pazSalvoDocument.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /**
+   * Muestra el formulario para escribir el motivo de cada mes pendiente
+   */
+  function showPendingReasonsForm(status) {
+    const student = status.studentData;
+    const saved = student.pendingReasons || {};
+    const periodText = status.startMonth
+      ? `desde ${status.startMonth} hasta ${status.currentMonth}`
+      : `hasta ${status.currentMonth}`;
+
+    const fields = status.pendingMonths.map(month => `
+      <div class="form-group">
+        <label for="reason-${month}">${month}: ¿por qué no se pagó?</label>
+        <input type="text" id="reason-${month}" data-month="${month}" list="reasonSuggestions"
+               maxlength="150" placeholder="Escriba el motivo">
+      </div>`).join('');
+
+    pazSalvoResult.innerHTML = `
+      <div class="alert alert-warning">
+        <p>⚠️ El alumno <strong>${escapeHtml(student.studentName)}</strong> tiene meses sin pagar.</p>
+        <p><strong>Período:</strong> ${periodText} 2026</p>
+        <p><strong>Meses pagados:</strong> ${status.paidMonths.length > 0 ? status.paidMonths.join(', ') : 'Ninguno'}</p>
+        <p><strong>Meses pendientes:</strong> ${status.pendingMonths.join(', ')}</p>
+        <p>Escriba el motivo de cada mes pendiente para generar el paz y salvo con observaciones.</p>
+        <form id="pendingReasonsForm" novalidate>
+          ${fields}
+          <p class="reason-error" id="reasonError" role="alert"></p>
+          <button type="submit" class="btn">Generar Paz y Salvo con observaciones</button>
+        </form>
+      </div>
+    `;
+    pazSalvoResult.querySelectorAll('input[data-month]').forEach(input => {
+      input.value = saved[input.dataset.month] || '';
+    });
+    pazSalvoResult.style.display = 'block';
+    pazSalvoDocument.style.display = 'none';
+
+    document.getElementById('pendingReasonsForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const reasons = {};
+      const missing = [];
+      pazSalvoResult.querySelectorAll('input[data-month]').forEach(input => {
+        const reason = input.value.trim();
+        input.classList.toggle('input-error', !reason);
+        if (reason) {
+          reasons[input.dataset.month] = reason;
+        } else {
+          missing.push(input.dataset.month);
+        }
+      });
+      if (missing.length > 0) {
+        document.getElementById('reasonError').textContent = `Falta el motivo de: ${missing.join(', ')}.`;
+        return;
+      }
+      savePendingReasons(student.studentName, reasons);
+      showPazSalvoDocument(status, reasons);
+    });
+  }
+
   if (pazSalvoForm) {
     pazSalvoForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      
+
       const studentName = document.getElementById('pazSalvoStudentName').value.trim();
       if (!studentName) {
         alert('Por favor ingrese el nombre del alumno');
@@ -434,11 +516,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const status = checkStudentStatus(studentName);
-      
+
       if (!status.found) {
         pazSalvoResult.innerHTML = `
           <div class="alert alert-error">
-            <p>❌ No se encontró ningún registro para el alumno: <strong>${studentName}</strong></p>
+            <p>❌ No se encontró ningún registro para el alumno: <strong>${escapeHtml(studentName)}</strong></p>
             <p>Por favor verifique que el nombre esté correcto o que el alumno tenga pagos registrados.</p>
           </div>
         `;
@@ -448,84 +530,91 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!status.isUpToDate) {
-        const periodText = status.startMonth 
-          ? `desde ${status.startMonth} hasta ${status.currentMonth}`
-          : `hasta ${status.currentMonth}`;
-        
-        pazSalvoResult.innerHTML = `
-          <div class="alert alert-warning">
-            <p>⚠️ El alumno <strong>${status.studentData.studentName}</strong> no está al día con sus pagos.</p>
-            <p><strong>Período requerido:</strong> ${periodText} 2026</p>
-            <p><strong>Mes de inicio del servicio:</strong> ${status.startMonth || 'No determinado'}</p>
-            <p><strong>Meses pagados:</strong> ${status.paidMonths.length > 0 ? status.paidMonths.join(', ') : 'Ninguno'}</p>
-            <p><strong>Meses pendientes:</strong> ${status.pendingMonths.join(', ')}</p>
-            <p>No se puede generar el paz y salvo hasta que el alumno esté al día con todos los pagos requeridos para su período.</p>
-          </div>
-        `;
-        pazSalvoResult.style.display = 'block';
-        pazSalvoDocument.style.display = 'none';
+        showPendingReasonsForm(status);
         return;
       }
 
-      // El alumno está al día, mostrar el documento de paz y salvo
-      generatePazSalvo(status);
-      pazSalvoResult.style.display = 'none';
-      pazSalvoDocument.style.display = 'block';
-      pazSalvoDocument.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showPazSalvoDocument(status, {});
     });
   }
 
   /**
-   * Genera el documento de paz y salvo
+   * Genera el documento de paz y salvo (al día o con observaciones)
    */
-  function generatePazSalvo(status) {
+  function generatePazSalvo(status, reasons = {}) {
     const studentData = status.studentData;
     const paidMonths = status.paidMonths;
+    const pendingMonths = status.pendingMonths;
+    const hasPending = pendingMonths.length > 0;
     const startMonth = status.startMonth;
     const currentMonth = status.currentMonth;
-    
-    const currentDate = new Date();
-    const formattedDate = currentDate.toLocaleDateString('es-CO', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+
+    const formattedDate = new Date().toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
 
-    // Mapeo de tipos de ruta a texto descriptivo
     const routeTypeMap = {
       'media180': 'Media Ruta - $180,000',
       'completa295': 'Ruta completa - $295,000',
       'completa': 'Ruta Completa - $310,000'
     };
-
     const routeTypeText = routeTypeMap[studentData.routeType] || studentData.routeType;
 
-    // Formatear el período del servicio
-    let periodText = '';
+    let periodText = 'Febrero - Noviembre 2026';
     if (startMonth && currentMonth) {
-      if (startMonth === currentMonth) {
-        periodText = `${startMonth} 2026`;
-      } else {
-        periodText = `${startMonth} - ${currentMonth} 2026`;
-      }
-    } else {
-      periodText = 'Febrero - Noviembre 2026';
+      periodText = startMonth === currentMonth
+        ? `${startMonth} 2026`
+        : `${startMonth} - ${currentMonth} 2026`;
     }
 
-    document.getElementById('pazSalvoDocStudentName').textContent = studentData.studentName;
-    document.getElementById('pazSalvoDocParentName').textContent = studentData.parentName;
-    document.getElementById('pazSalvoDocRouteType').textContent = routeTypeText;
-    document.getElementById('pazSalvoDocDate').textContent = formattedDate;
-    document.getElementById('pazSalvoDocMonths').textContent = paidMonths.join(', ');
-    document.getElementById('pazSalvoDocTotalMonths').textContent = paidMonths.length;
-    document.getElementById('pazSalvoDocPeriod').textContent = periodText;
+    const setText = (id, value) => { document.getElementById(id).textContent = value; };
+    const setHidden = (id, value) => { document.getElementById(id).hidden = value; };
+
+    setText('pazSalvoDocStudentName', studentData.studentName);
+    setText('pazSalvoDocParentName', studentData.parentName);
+    setText('pazSalvoDocRouteType', routeTypeText);
+    setText('pazSalvoDocDate', formattedDate);
+    setText('pazSalvoDocMonths', paidMonths.length > 0 ? paidMonths.join(', ') : 'Ninguno');
+    setText('pazSalvoDocTotalMonths', paidMonths.length);
+    setText('pazSalvoDocPeriod', periodText);
+    setText('pazSalvoDocPeriodPending', periodText);
+    setText('pazSalvoDocTotalPending', pendingMonths.length);
+
+    // Alternar entre versión "al día" y versión "con observaciones"
+    setHidden('pazSalvoSubtitle', !hasPending);
+    setHidden('pazSalvoBodyUpToDate', hasPending);
+    setHidden('pazSalvoBodyPending', !hasPending);
+    setHidden('pazSalvoPendingLine', !hasPending);
+    setHidden('pazSalvoPendingBlock', !hasPending);
+    setText('pazSalvoFooter', hasPending
+      ? 'Se expide el presente PAZ Y SALVO con las observaciones consignadas, para los fines que al interesado convengan.'
+      : 'Por lo tanto, se expide el presente PAZ Y SALVO para los fines que al interesado convengan.');
+
+    // Tabla de meses sin pagar con su motivo
+    const tbody = document.getElementById('pazSalvoPendingBody');
+    tbody.innerHTML = '';
+    pendingMonths.forEach(month => {
+      const row = document.createElement('tr');
+      const monthCell = document.createElement('td');
+      const reasonCell = document.createElement('td');
+      monthCell.textContent = month;
+      reasonCell.textContent = reasons[month] || '';
+      row.append(monthCell, reasonCell);
+      tbody.appendChild(row);
+    });
   }
 
   // Botón para imprimir/descargar el paz y salvo
   const downloadPazSalvoBtn = document.getElementById('downloadPazSalvo');
   if (downloadPazSalvoBtn) {
     downloadPazSalvoBtn.addEventListener('click', () => {
+      document.body.classList.add('print-paz-salvo');
       window.print();
     });
   }
+  window.addEventListener('afterprint', () => {
+    document.body.classList.remove('print-paz-salvo');
+  });
 });
