@@ -147,8 +147,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const studentsKey = 'studentsPayments';
     let students = JSON.parse(localStorage.getItem(studentsKey) || '{}');
     
-    // Normalizar el nombre del alumno (minúsculas para búsqueda)
-    const normalizedName = studentName.toLowerCase().trim();
+    // Reutilizar el registro existente del alumno (sin importar tildes, mayúsculas o espacios)
+    const normalizedName = findStudentKey(students, studentName) || normalizeName(studentName);
     
     if (!students[normalizedName]) {
       students[normalizedName] = {
@@ -183,11 +183,37 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Busca un alumno por nombre
    */
+  function normalizeName(name) {
+    return (name || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function findStudentKey(students, studentName) {
+    const target = normalizeName(studentName);
+    return Object.keys(students).find(k => normalizeName(students[k].studentName || k) === target) || null;
+  }
+
   function findStudent(studentName) {
-    const studentsKey = 'studentsPayments';
-    const students = JSON.parse(localStorage.getItem(studentsKey) || '{}');
-    const normalizedName = studentName.toLowerCase().trim();
-    return students[normalizedName] || null;
+    const students = JSON.parse(localStorage.getItem('studentsPayments') || '{}');
+    const target = normalizeName(studentName);
+    const matches = Object.keys(students)
+      .filter(k => normalizeName(students[k].studentName || k) === target)
+      .map(k => students[k]);
+    if (matches.length === 0) return null;
+
+    // Si el alumno quedó guardado en varios registros, se unen sus pagos y motivos
+    const merged = Object.assign({}, matches[0], { payments: [], pendingReasons: {} });
+    matches.forEach(record => {
+      (record.payments || []).forEach(p => {
+        if (!merged.payments.some(x => x.month === p.month)) merged.payments.push(p);
+      });
+      Object.assign(merged.pendingReasons, record.pendingReasons || {});
+    });
+    return merged;
   }
 
   /**
@@ -348,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert("Mes de cancelación no seleccionado.");
       return;
     }
-    const printedKey = "receiptPrinted_" + paymentMonth;
+    const printedKey = "receiptPrinted_" + normalizeName(document.getElementById('receiptStudentName').textContent) + "_" + paymentMonth;
     const alreadyPrinted = localStorage.getItem(printedKey);
 
     if (alreadyPrinted) {
@@ -433,10 +459,30 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function savePendingReasons(studentName, reasons) {
     const students = JSON.parse(localStorage.getItem('studentsPayments') || '{}');
-    const key = studentName.toLowerCase().trim();
-    if (!students[key]) return;
+    const key = findStudentKey(students, studentName);
+    if (!key) return;
     students[key].pendingReasons = Object.assign(students[key].pendingReasons || {}, reasons);
     localStorage.setItem('studentsPayments', JSON.stringify(students));
+  }
+
+  /**
+   * Registra como pagado un mes que no quedó guardado (pago sin comprobante en la app)
+   */
+  function registerManualPayment(studentName, month) {
+    const students = JSON.parse(localStorage.getItem('studentsPayments') || '{}');
+    const key = findStudentKey(students, studentName);
+    if (!key) return;
+    const record = students[key];
+    if (!record.payments.some(p => p.month === month)) {
+      record.payments.push({
+        month: month,
+        amount: routePrices[record.routeType],
+        date: new Date().toISOString(),
+        receiptNumber: '',
+        manual: true
+      });
+      localStorage.setItem('studentsPayments', JSON.stringify(students));
+    }
   }
 
   function showPazSalvoDocument(status, reasons) {
@@ -458,9 +504,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fields = status.pendingMonths.map(month => `
       <div class="form-group">
-        <label for="reason-${month}">${month}: ¿por qué no se pagó?</label>
+        <label for="reason-${month}">${month}</label>
+        <label class="paid-check">
+          <input type="checkbox" data-paid="${month}"> Este mes sí está pagado
+        </label>
         <input type="text" id="reason-${month}" data-month="${month}" list="reasonSuggestions"
-               maxlength="150" placeholder="Escriba el motivo">
+               maxlength="150" placeholder="Motivo por el que no se pagó">
       </div>`).join('');
 
     pazSalvoResult.innerHTML = `
@@ -469,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <p><strong>Período:</strong> ${periodText} 2026</p>
         <p><strong>Meses pagados:</strong> ${status.paidMonths.length > 0 ? status.paidMonths.join(', ') : 'Ninguno'}</p>
         <p><strong>Meses pendientes:</strong> ${status.pendingMonths.join(', ')}</p>
-        <p>Escriba el motivo de cada mes pendiente para generar el paz y salvo con observaciones.</p>
+        <p>Si un mes sí fue pagado, márquelo como pagado. Si no, escriba el motivo.</p>
         <form id="pendingReasonsForm" novalidate>
           ${fields}
           <p class="reason-error" id="reasonError" role="alert"></p>
@@ -483,25 +532,41 @@ document.addEventListener('DOMContentLoaded', () => {
     pazSalvoResult.style.display = 'block';
     pazSalvoDocument.style.display = 'none';
 
+    pazSalvoResult.querySelectorAll('input[data-paid]').forEach(box => {
+      box.addEventListener('change', () => {
+        const input = document.getElementById('reason-' + box.dataset.paid);
+        input.disabled = box.checked;
+        if (box.checked) input.classList.remove('input-error');
+      });
+    });
+
     document.getElementById('pendingReasonsForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const reasons = {};
+      const nowPaid = [];
       const missing = [];
       pazSalvoResult.querySelectorAll('input[data-month]').forEach(input => {
+        const month = input.dataset.month;
+        const box = pazSalvoResult.querySelector(`input[data-paid="${month}"]`);
+        if (box.checked) {
+          nowPaid.push(month);
+          return;
+        }
         const reason = input.value.trim();
         input.classList.toggle('input-error', !reason);
         if (reason) {
-          reasons[input.dataset.month] = reason;
+          reasons[month] = reason;
         } else {
-          missing.push(input.dataset.month);
+          missing.push(month);
         }
       });
       if (missing.length > 0) {
         document.getElementById('reasonError').textContent = `Falta el motivo de: ${missing.join(', ')}.`;
         return;
       }
+      nowPaid.forEach(month => registerManualPayment(student.studentName, month));
       savePendingReasons(student.studentName, reasons);
-      showPazSalvoDocument(status, reasons);
+      showPazSalvoDocument(checkStudentStatus(student.studentName), reasons);
     });
   }
 

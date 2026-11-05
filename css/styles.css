@@ -407,3 +407,13 @@ footer {
     border: 1px solid #000;
   }
 }
+
+/* Casilla "Este mes sí está pagado" */
+.form-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.5rem;
+}
+
+.paid-check {
+  cursor: pointer;
+}
